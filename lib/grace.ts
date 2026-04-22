@@ -25,7 +25,7 @@ async function getGraceUrl(): Promise<string> {
     .single()
 
   if (data?.value) {
-    _cachedUrl = data.value
+    _cachedUrl = data.value as string
     _cachedAt = now
     return _cachedUrl
   }
