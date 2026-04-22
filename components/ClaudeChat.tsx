@@ -53,7 +53,7 @@ export function ClaudeChat({ context, placeholder = '재무 관련 질문을 해
   }
 
   return (
-    <div className="fixed bottom-6 right-6 w-96 h-[520px] bg-gray-900 rounded-2xl shadow-2xl flex flex-col border border-gray-700 z-40">
+    <div className="fixed bottom-6 right-6 w-[560px] h-[75vh] bg-gray-900 rounded-2xl shadow-2xl flex flex-col border border-gray-700 z-40">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700 shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-green-400" />

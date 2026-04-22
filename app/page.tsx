@@ -1,5 +1,5 @@
 'use client'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { signOut, useSession } from 'next-auth/react'
 import { CalendarPanel } from '@/components/CalendarPanel'
 import { ListPanel } from '@/components/ListPanel'
@@ -24,8 +24,42 @@ export default function Dashboard() {
   const [modal, setModal] = useState<Modal>(null)
   const [changeCandidates, setChangeCandidates] = useState<ChangeCandidate[]>([])
   const [refreshKey, setRefreshKey] = useState(0)
+  const [chatContext, setChatContext] = useState<Record<string, unknown>>({ currentMonth })
 
   const refresh = useCallback(() => setRefreshKey(k => k + 1), [])
+
+  useEffect(() => {
+    async function loadChatContext() {
+      const [accountsRes, calendarRes, fixedRes] = await Promise.all([
+        fetch('/api/accounts').then(r => r.json()).catch(() => []),
+        fetch(`/api/calendar/${currentMonth}`).then(r => r.json()).catch(() => ({})),
+        fetch('/api/fixed-expenses').then(r => r.json()).catch(() => []),
+      ])
+
+      const transactions: { amount: number; category?: { name: string } }[] = calendarRes.transactions ?? []
+      const byCategory: Record<string, number> = {}
+      let totalSpending = 0
+      for (const t of transactions) {
+        if (t.amount < 0) {
+          totalSpending += Math.abs(t.amount)
+          const cat = t.category?.name ?? '미분류'
+          byCategory[cat] = (byCategory[cat] ?? 0) + Math.abs(t.amount)
+        }
+      }
+
+      setChatContext({
+        currentMonth,
+        accounts: accountsRes,
+        fixedExpenses: fixedRes,
+        monthlySpending: {
+          total: totalSpending,
+          byCategory,
+          transactionCount: transactions.length,
+        },
+      })
+    }
+    loadChatContext()
+  }, [currentMonth, refreshKey])
 
   function handleImported(candidates: ChangeCandidate[]) {
     setModal(null)
@@ -97,7 +131,7 @@ export default function Dashboard() {
       </div>
 
       <ClaudeChat
-        context={{ currentMonth }}
+        context={chatContext}
         placeholder="이번 달 지출, 통장 구조, 재무 관리 등 무엇이든 물어보세요..."
       />
 
